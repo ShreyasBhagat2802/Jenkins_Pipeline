@@ -54,11 +54,7 @@ pipeline {
                       pip install -r requirements.txt
 
                       echo "Running database migrations..."
-                      if [ -f ~/db_data.sh ]; then
-                        bash ~/db_data.sh
-                      else
-                        echo "WARNING: db_data.sh not found. Skipping database migration tasks."
-                      fi
+                      bash ~/db_data.sh
 
                       echo "Restarting the ${SERVICE_NAME} service..."
                       sudo systemctl restart ${SERVICE_NAME}
