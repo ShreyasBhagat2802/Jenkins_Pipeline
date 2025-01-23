@@ -6,9 +6,9 @@ pipeline {
         DEPLOY_REPO = "https://github.com/ShreyasBhagat2802/Jenkins_Pipeline"
         BACKEND_SERVER = "10.0.9.126"
         BACKEND_USER = "ShreyasChatApp"
-        CHATAPP_DIR = "/Django_Chatapp" 
+        CHATAPP_DIR = "/Django_Chatapp"
         SSH_KEY = "/var/lib/jenkins/.ssh/id_rsa"
-        SERVICE_NAME = "django-backend" 
+        SERVICE_NAME = "django-backend"
     }
 
     stages {
@@ -40,7 +40,7 @@ pipeline {
                     // SSH into the backend server to execute deployment tasks
                     echo "Executing tasks on the backend server as ${BACKEND_USER}..."
                     sh """
-                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} 'bash -s' <<- EOF
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       set -e
                       source ~/.bashrc
 
@@ -64,7 +64,7 @@ pipeline {
                       sudo systemctl restart ${SERVICE_NAME}
 
                       echo "Deployment tasks completed for ${BACKEND_USER}!"
-                    EOF
+                    '
                     """
                 }
             }
