@@ -40,7 +40,7 @@ pipeline {
                     // SSH into the backend server to execute deployment tasks
                     echo "Executing tasks on the backend server as ${BACKEND_USER}..."
                     sh """
-                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} << EOF
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} 'bash -s' << 'EOF'
                       set -e
                       source ~/.bashrc
 
