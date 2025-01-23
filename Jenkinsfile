@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         APP_REPO = "https://github.com/ShreyasBhagat2802/Django_Chatapp"
-        DEPLOY_REPO = "https://github.com/ShreyasBhagat2802/Jenkins_Pipeline"
         BACKEND_SERVER = "10.0.9.126"
         BACKEND_USER = "ShreyasChatApp"
         CHATAPP_DIR = "/Django_Chatapp"
