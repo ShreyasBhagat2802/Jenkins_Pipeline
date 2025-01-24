@@ -6,7 +6,7 @@ pipeline {
         BACKEND_SERVER = "10.0.9.126"
         BACKEND_USER = "ShreyasChatApp"
         CHATAPP_DIR = "/Django_Chatapp"
-        SSH_KEY = "/var/lib/jenkins/.ssh/id_rsa"
+        SSH_KEY = "/home/jenkins/.ssh/id_rsa"
         SERVICE_NAME = "django-backend"
     }
 
