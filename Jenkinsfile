@@ -42,36 +42,82 @@ pipeline {
             }
         }
 
-        stage('Execute Deployment Tasks on Backend Server (Build-Agent)') {
+        stage('Activate Virtual Environment (Build-Agent)') {
             agent {
                 label 'build-agent' // Runs on the Slave Node
             }
             steps {
                 script {
-                    echo "Executing deployment tasks on the backend server from the Build-Agent..."
+                    echo "Activating virtual environment on the Build-Agent..."
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
-                      set -e
                       source ~/.bashrc
-
                       echo "Activating virtual environment..."
                       source venv/bin/activate
-
-                      echo "Navigating to the application directory..."
-                      cd ${CHATAPP_DIR}
-
-                      echo "Installing dependencies from requirements.txt..."
-                      pip install -r requirements.txt
-
-                      echo "Running database migrations..."
-                      bash ~/db_data.sh
-
-                      echo "Restarting the ${SERVICE_NAME} service..."
-                      sudo systemctl restart ${SERVICE_NAME}
-
-                      echo "Deployment tasks completed for ${BACKEND_USER}!"
                     '
                     """
+                }
+            }
+        }
+
+        stage('Install Dependencies (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
+            steps {
+                script {
+                    echo "Installing dependencies from requirements.txt on the Build-Agent..."
+                    sh """
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
+                      echo "Installing dependencies from requirements.txt..."
+                      pip install -r ${CHATAPP_DIR}/requirements.txt
+                    '
+                    """
+                }
+            }
+        }
+
+        stage('Run Database Migrations (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
+            steps {
+                script {
+                    echo "Running database migrations on the Build-Agent..."
+                    sh """
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
+                      echo "Running database migrations..."
+                      bash /home/ShreyasChatApp/db_data.sh
+                    '
+                    """
+                }
+            }
+        }
+
+        stage('Restart Service (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
+            steps {
+                script {
+                    echo "Restarting the ${SERVICE_NAME} service on the Build-Agent..."
+                    sh """
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
+                      echo "Restarting the ${SERVICE_NAME} service..."
+                      sudo systemctl restart ${SERVICE_NAME}
+                    '
+                    """
+                }
+            }
+        }
+
+        stage('Deployment Completed (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
+            steps {
+                script {
+                    echo "Deployment tasks completed for ${BACKEND_USER}!"
                 }
             }
         }
