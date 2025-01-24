@@ -13,7 +13,7 @@ pipeline {
     stages {
         stage('Clone Application Repository (Master)') {
             agent {
-                label 'master' // Runs on the Master Node
+                label 'Master' // Runs on the Master Node
             }
             steps {
                 script {
