@@ -1,5 +1,5 @@
 pipeline {
-    agent {build-agent} 
+    agent none // No default agent; specify agents for each stage explicitly
 
     environment {
         APP_REPO = "https://github.com/ShreyasBhagat2802/Django_Chatapp"
@@ -12,6 +12,9 @@ pipeline {
 
     stages {
         stage('Clone Application Repository (Master)') {
+            agent {
+                label 'build-agent' // Runs on the Master Node
+            }
             steps {
                 script {
                     echo "Cloning the application repository on the Master Node..."
@@ -21,6 +24,9 @@ pipeline {
         }
 
         stage('Sync Files to Backend Server (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
             steps {
                 script {
                     echo "Syncing files to the backend server from the Build-Agent..."
@@ -36,15 +42,32 @@ pipeline {
             }
         }
 
-        stage('Activate Virtual Environment (Build-Agent)') {
+        stage('SSH into Backend Server (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
             steps {
                 script {
-                    echo "Activating virtual environment on the Build-Agent..."
+                    echo "SSH-ing into the backend server from the Build-Agent..."
+                    sh """
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} 'echo "Connected to the backend server!"'
+                    """
+                }
+            }
+        }
+
+        stage('Activate Virtual Environment (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
+            steps {
+                script {
+                    echo "Activating virtual environment on the backend server..."
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
+                      set -e
                       source ~/.bashrc
-                      echo "Activating virtual environment..."
-                      source venv/bin/activate
+                      echo "Virtual environment activated!"
                     '
                     """
                 }
@@ -52,14 +75,18 @@ pipeline {
         }
 
         stage('Install Dependencies (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
             steps {
                 script {
-                    echo "Installing dependencies from requirements.txt on the Build-Agent..."
+                    echo "Installing dependencies from requirements.txt..."
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
-                      echo "Installing dependencies from requirements.txt..."
-                      source venv/bin/activate
-                      pip install -r ${CHATAPP_DIR}/requirements.txt
+                      set -e
+                      cd ${CHATAPP_DIR}
+                      pip install -r requirements.txt
+                      echo "Dependencies installed!"
                     '
                     """
                 }
@@ -67,14 +94,18 @@ pipeline {
         }
 
         stage('Run Database Migrations (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
             steps {
                 script {
-                    echo "Running database migrations on the Build-Agent..."
+                    echo "Running database migrations..."
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
-                      echo "Running database migrations..."
-                      source venv/bin/activate
-                      bash /home/ShreyasChatApp/db_data.sh
+                      set -e
+                      cd ${CHATAPP_DIR}
+                      bash ~/db_data.sh
+                      echo "Database migrations completed!"
                     '
                     """
                 }
@@ -82,24 +113,18 @@ pipeline {
         }
 
         stage('Restart Service (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
             steps {
                 script {
-                    echo "Restarting the ${SERVICE_NAME} service on the Build-Agent..."
+                    echo "Restarting the ${SERVICE_NAME} service..."
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
-                      echo "Restarting the ${SERVICE_NAME} service..."
-                      source venv/bin/activate
                       sudo systemctl restart ${SERVICE_NAME}
+                      echo "Service restarted successfully!"
                     '
                     """
-                }
-            }
-        }
-
-        stage('Deployment Completed (Build-Agent)') {
-            steps {
-                script {
-                    echo "Deployment tasks completed for ${BACKEND_USER}!"
                 }
             }
         }
