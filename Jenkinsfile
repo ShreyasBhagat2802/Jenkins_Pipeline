@@ -68,6 +68,7 @@ pipeline {
                       set -e
                       source ~/.bashrc
                       echo "Virtual environment activated!"
+                      source venv/bin/activate
                     '
                     """
                 }
