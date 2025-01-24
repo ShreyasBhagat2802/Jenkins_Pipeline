@@ -1,5 +1,5 @@
 pipeline {
-    agent build-agent 
+    agent {build-agent} 
 
     environment {
         APP_REPO = "https://github.com/ShreyasBhagat2802/Django_Chatapp"
