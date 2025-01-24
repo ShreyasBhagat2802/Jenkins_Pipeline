@@ -1,5 +1,5 @@
 pipeline {
-    agent none 
+    agent build-agent 
 
     environment {
         APP_REPO = "https://github.com/ShreyasBhagat2802/Django_Chatapp"
@@ -12,9 +12,6 @@ pipeline {
 
     stages {
         stage('Clone Application Repository (Master)') {
-            agent {
-                label 'build-agent' // Runs on the Master Node
-            }
             steps {
                 script {
                     echo "Cloning the application repository on the Master Node..."
@@ -24,9 +21,6 @@ pipeline {
         }
 
         stage('Sync Files to Backend Server (Build-Agent)') {
-            agent {
-                label 'build-agent' // Runs on the Slave Node
-            }
             steps {
                 script {
                     echo "Syncing files to the backend server from the Build-Agent..."
@@ -43,9 +37,6 @@ pipeline {
         }
 
         stage('Activate Virtual Environment (Build-Agent)') {
-            agent {
-                label 'build-agent' // Runs on the Slave Node
-            }
             steps {
                 script {
                     echo "Activating virtual environment on the Build-Agent..."
@@ -61,9 +52,6 @@ pipeline {
         }
 
         stage('Install Dependencies (Build-Agent)') {
-            agent {
-                label 'build-agent' // Runs on the Slave Node
-            }
             steps {
                 script {
                     echo "Installing dependencies from requirements.txt on the Build-Agent..."
@@ -79,9 +67,6 @@ pipeline {
         }
 
         stage('Run Database Migrations (Build-Agent)') {
-            agent {
-                label 'build-agent' // Runs on the Slave Node
-            }
             steps {
                 script {
                     echo "Running database migrations on the Build-Agent..."
@@ -97,9 +82,6 @@ pipeline {
         }
 
         stage('Restart Service (Build-Agent)') {
-            agent {
-                label 'build-agent' // Runs on the Slave Node
-            }
             steps {
                 script {
                     echo "Restarting the ${SERVICE_NAME} service on the Build-Agent..."
@@ -115,9 +97,6 @@ pipeline {
         }
 
         stage('Deployment Completed (Build-Agent)') {
-            agent {
-                label 'build-agent' // Runs on the Slave Node
-            }
             steps {
                 script {
                     echo "Deployment tasks completed for ${BACKEND_USER}!"
