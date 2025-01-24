@@ -99,8 +99,11 @@ pipeline {
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       set -e
-                      cd ${CHATAPP_DIR}
-                      bash ~/db_data.sh || { echo "ERROR: Database migrations failed."; exit 1; }
+                      source venv/bin/activate
+                      source ~/.bashrc
+                      cd ${CHATAPP_DIR}/fundoo
+                      python3 manage.py makemigrations
+                      python3 manage.py migrate
                       echo "Database migrations completed!"
                     '
                     """
