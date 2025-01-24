@@ -31,12 +31,7 @@ pipeline {
                 script {
                     echo "Syncing files to the backend server from the Build-Agent..."
                     sh """
-                    rsync -avz \$(pwd)/ ${BACKEND_USER}@${BACKEND_SERVER}:${CHATAPP_DIR}
-
-                    if [ \$? -ne 0 ]; then
-                      echo "ERROR: File sync failed. Please check the SSH connection and directory permissions."
-                      exit 1
-                    fi
+                    rsync -avz -e "ssh -i ${SSH_KEY}" \$(pwd)/ ${BACKEND_USER}@${BACKEND_SERVER}:${CHATAPP_DIR} || { echo 'ERROR: File sync failed. Please check the SSH connection and directory permissions.'; exit 1; }
                     """
                 }
             }
@@ -50,7 +45,7 @@ pipeline {
                 script {
                     echo "SSH-ing into the backend server from the Build-Agent..."
                     sh """
-                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} 'echo "Connected to the backend server!"'
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} 'echo "Connected to the backend server!"' || { echo 'ERROR: SSH connection failed!'; exit 1; }
                     """
                 }
             }
@@ -68,7 +63,7 @@ pipeline {
                       set -e
                       source ~/.bashrc
                       echo "Virtual environment activated!"
-                      source venv/bin/activate
+                      source venv/bin/activate || { echo "ERROR: Virtual environment activation failed."; exit 1; }
                     '
                     """
                 }
@@ -86,7 +81,7 @@ pipeline {
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       set -e
                       cd ${CHATAPP_DIR}
-                      pip install -r requirements.txt
+                      pip install -r requirements.txt || { echo "ERROR: Dependency installation failed."; exit 1; }
                       echo "Dependencies installed!"
                     '
                     """
@@ -105,7 +100,7 @@ pipeline {
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       set -e
                       cd ${CHATAPP_DIR}
-                      bash ~/db_data.sh
+                      bash ~/db_data.sh || { echo "ERROR: Database migrations failed."; exit 1; }
                       echo "Database migrations completed!"
                     '
                     """
@@ -122,7 +117,7 @@ pipeline {
                     echo "Restarting the ${SERVICE_NAME} service..."
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
-                      sudo systemctl restart ${SERVICE_NAME}
+                      sudo systemctl restart ${SERVICE_NAME} || { echo "ERROR: Service restart failed."; exit 1; }
                       echo "Service restarted successfully!"
                     '
                     """
