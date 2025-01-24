@@ -20,12 +20,9 @@ pipeline {
             }
         }
 
-        stage('Execute Deployment Tasks') {
+        stage('Sync Files to Backend Server') {
             steps {
                 script {
-                    echo "Starting deployment process..."
-
-                    // Syncing files to the backend server
                     echo "Syncing files to the backend server..."
                     sh """
                     rsync -avz \$(pwd)/ ${BACKEND_USER}@${BACKEND_SERVER}:${CHATAPP_DIR}
@@ -35,30 +32,72 @@ pipeline {
                       exit 1
                     fi
                     """
+                }
+            }
+        }
 
-                    // SSH into the backend server to execute deployment tasks
-                    echo "Executing tasks on the backend server as ${BACKEND_USER}..."
+        stage('Activate Virtual Environment') {
+            steps {
+                script {
+                    echo "Activating virtual environment on the backend server..."
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       set -e
                       source ~/.bashrc
-
-                      echo "Activating virtual environment..."
                       source venv/bin/activate
+                    '
+                    """
+                }
+            }
+        }
 
-                      echo "Navigating to the application directory..."
+        stage('Navigate to Application Directory') {
+            steps {
+                script {
+                    echo "Navigating to the application directory on the backend server..."
+                    sh """
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       cd ${CHATAPP_DIR}
+                    '
+                    """
+                }
+            }
+        }
 
-                      echo "Installing dependencies from requirements.txt..."
+        stage('Install Dependencies') {
+            steps {
+                script {
+                    echo "Installing dependencies from requirements.txt on the backend server..."
+                    sh """
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
+                      cd ${CHATAPP_DIR}
                       pip install -r requirements.txt
+                    '
+                    """
+                }
+            }
+        }
 
-                      echo "Running database migrations..."
+        stage('Run Database Migrations') {
+            steps {
+                script {
+                    echo "Running database migrations on the backend server..."
+                    sh """
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       bash ~/db_data.sh
+                    '
+                    """
+                }
+            }
+        }
 
-                      echo "Restarting the ${SERVICE_NAME} service..."
+        stage('Restart Backend Service') {
+            steps {
+                script {
+                    echo "Restarting the ${SERVICE_NAME} service on the backend server..."
+                    sh """
+                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       sudo systemctl restart ${SERVICE_NAME}
-
-                      echo "Deployment tasks completed for ${BACKEND_USER}!"
                     '
                     """
                 }
