@@ -100,7 +100,6 @@ pipeline {
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       set -e
                       source ~/.bashrc
-                      source venv/bin/activate
                       bash /home/ShreyasChatApp/db_data.sh
                       env
                       echo "Database migrations completed!"
