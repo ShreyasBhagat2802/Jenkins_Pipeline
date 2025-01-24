@@ -103,9 +103,6 @@ pipeline {
                       source venv/bin/activate
                       bash /home/ShreyasChatApp/db_data.sh
                       env
-                      cd ${CHATAPP_DIR}/fundoo
-                      python3 manage.py makemigrations
-                      python3 manage.py migrate
                       echo "Database migrations completed!"
                     '
                     """
