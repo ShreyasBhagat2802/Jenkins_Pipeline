@@ -1,5 +1,5 @@
 pipeline {
-    agent none // No default agent; specify agents for each stage explicitly
+    agent none 
 
     environment {
         APP_REPO = "https://github.com/ShreyasBhagat2802/Django_Chatapp"
@@ -70,6 +70,7 @@ pipeline {
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       echo "Installing dependencies from requirements.txt..."
+                      source venv/bin/activate
                       pip install -r ${CHATAPP_DIR}/requirements.txt
                     '
                     """
@@ -87,6 +88,7 @@ pipeline {
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       echo "Running database migrations..."
+                      source venv/bin/activate
                       bash /home/ShreyasChatApp/db_data.sh
                     '
                     """
@@ -104,6 +106,7 @@ pipeline {
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       echo "Restarting the ${SERVICE_NAME} service..."
+                      source venv/bin/activate
                       sudo systemctl restart ${SERVICE_NAME}
                     '
                     """
