@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent none // No default agent; specify agents for each stage explicitly
 
     environment {
         APP_REPO = "https://github.com/ShreyasBhagat2802/Django_Chatapp"
@@ -11,19 +11,25 @@ pipeline {
     }
 
     stages {
-        stage('Clone Application Repository') {
+        stage('Clone Application Repository (Master)') {
+            agent {
+                label 'master' // Runs on the Master Node
+            }
             steps {
                 script {
-                    echo "Cloning the application repository..."
+                    echo "Cloning the application repository on the Master Node..."
                     git branch: 'main', url: "${APP_REPO}"
                 }
             }
         }
 
-        stage('Sync Files to Backend Server') {
+        stage('Sync Files to Backend Server (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
             steps {
                 script {
-                    echo "Syncing files to the backend server..."
+                    echo "Syncing files to the backend server from the Build-Agent..."
                     sh """
                     rsync -avz \$(pwd)/ ${BACKEND_USER}@${BACKEND_SERVER}:${CHATAPP_DIR}
 
@@ -36,69 +42,34 @@ pipeline {
             }
         }
 
-        stage('Activate Virtual Environment') {
+        stage('Execute Deployment Tasks on Backend Server (Build-Agent)') {
+            agent {
+                label 'build-agent' // Runs on the Slave Node
+            }
             steps {
                 script {
-                    echo "Activating virtual environment on the backend server..."
+                    echo "Executing deployment tasks on the backend server from the Build-Agent..."
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       set -e
                       source ~/.bashrc
+
+                      echo "Activating virtual environment..."
                       source venv/bin/activate
-                    '
-                    """
-                }
-            }
-        }
 
-        stage('Navigate to Application Directory') {
-            steps {
-                script {
-                    echo "Navigating to the application directory on the backend server..."
-                    sh """
-                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
+                      echo "Navigating to the application directory..."
                       cd ${CHATAPP_DIR}
-                    '
-                    """
-                }
-            }
-        }
 
-        stage('Install Dependencies') {
-            steps {
-                script {
-                    echo "Installing dependencies from requirements.txt on the backend server..."
-                    sh """
-                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
-                      cd ${CHATAPP_DIR}
+                      echo "Installing dependencies from requirements.txt..."
                       pip install -r requirements.txt
-                    '
-                    """
-                }
-            }
-        }
 
-        stage('Run Database Migrations') {
-            steps {
-                script {
-                    echo "Running database migrations on the backend server..."
-                    sh """
-                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
-                      source ~/.bashrc
+                      echo "Running database migrations..."
                       bash ~/db_data.sh
-                    '
-                    """
-                }
-            }
-        }
 
-        stage('Restart Backend Service') {
-            steps {
-                script {
-                    echo "Restarting the ${SERVICE_NAME} service on the backend server..."
-                    sh """
-                    ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
+                      echo "Restarting the ${SERVICE_NAME} service..."
                       sudo systemctl restart ${SERVICE_NAME}
+
+                      echo "Deployment tasks completed for ${BACKEND_USER}!"
                     '
                     """
                 }
