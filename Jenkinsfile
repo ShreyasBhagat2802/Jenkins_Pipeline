@@ -99,7 +99,6 @@ pipeline {
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
                       set -e
-                      source venv/bin/activate
                       source ~/.bashrc
                       bash /home/ShreyasChatApp/db_data.sh
                       env
