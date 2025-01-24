@@ -84,6 +84,7 @@ pipeline {
                     echo "Running database migrations on the backend server..."
                     sh """
                     ssh -i ${SSH_KEY} ${BACKEND_USER}@${BACKEND_SERVER} '
+                      source ~/.bashrc
                       bash ~/db_data.sh
                     '
                     """
